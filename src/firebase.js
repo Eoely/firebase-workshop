@@ -47,7 +47,7 @@ const createQuestion = (question) => {
      * This argument allows you to automatically send in all elements in the object
      * automatically
      */
-    addDoc(collection(db, "questions"),{
+    addDoc(collection(db, "questions"), {
         ...question,
     });
 };
@@ -55,7 +55,7 @@ const createQuestion = (question) => {
 const getQuestion = (id) => {
     // Hent spøsmål fra Firestore
     // https://firebase.google.com/docs/firestore/query-data/get-data#get_a_document
-    
+
     //Need to return value
     const questionRef = doc(db, "questions", id);
     return getDoc(questionRef);
@@ -66,13 +66,13 @@ const updateQuestion = (question, id) => {
     // https://firebase.google.com/docs/firestore/manage-data/add-data#update-data
     //Assuming the param "question" is a object containting all values in updated question
     //Use spread operator to send all values
-    updateDoc(doc(db,"questions",id),{...question});
+    updateDoc(doc(db, "questions", id), { ...question });
 }
 
 const deleteQuestion = (id) => {
     // Slett spøsmål i Firestore med id
     // https://firebase.google.com/docs/firestore/manage-data/delete-data#delete_documents
-    deleteDoc(doc(db, "questions",id));
+    deleteDoc(doc(db, "questions", id));
 }
 
 const getQuestions = () => {
@@ -88,34 +88,64 @@ const createQuiz = () => {
 const registerWithEmailAndPassword = async (name, email, password) => {
     // Registrer en bruker med epost og passord
     // https://firebase.google.com/docs/auth/web/password-auth#create_a_password-based_account
-    try {
-        console.log("Registreing av bruker var en suksess!");
-    }
-    catch (err) {
-        console.error(err);
-    }
-};
+    const auth = getAuth();
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(errorCode);
+            console.log(errorMessage);
+            alert(errorCode,errorMessage)
+        });
+}
 
 const signInWithGoogle = async () => {
     // Registring og innlogging med Google Provider
     // https://firebase.google.com/docs/auth/web/google-signin#handle_the_sign-in_flow_with_the_firebase_sdk
-    try {
-        console.log("Innlogget bruker med Google")
-    }
-    catch (err) {
-        console.error(err);
-    }
-};
+
+    const provider = new GoogleAuthProvider();
+    const auth = getAuth();
+    const res = await signInWithPopup(auth, provider)
+        .then((result) => {
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential.accessToken;
+            // The signed-in user info.
+            const user = result.user;
+            console.log("Bruker innlogget med google");
+        })
+        .catch((error) => {
+            // Handle Errors here.
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            // The email of the user's account used.
+            const email = error.email;
+            // The AuthCredential type that was used.
+            const credential = GoogleAuthProvider.credentialFromError(error);
+            console.log(errorCode,errorMessage);
+            // ...
+        });
+}
 
 const logInWithEmailAndPassword = async (email, password) => {
     // Logg inn med epost og passord
     // https://firebase.google.com/docs/auth/web/password-auth#sign_in_a_user_with_an_email_address_and_password
-    try {
-        console.log("Bruker innlogget med epost og passord")
-    }
-    catch (err) {
-        console.error(err);
-    }
+
+    const auth = getAuth();
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Signed in 
+            const user = userCredential.user;
+            console.log("Bruker innlogget med epost og passord")
+            // ...
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(errorCode,errorMessage)
+        });
 };
 
 const logOut = async () => {
@@ -127,12 +157,19 @@ const logOut = async () => {
 const sendPasswordReset = async (email) => {
     // Send mail for å resette passord
     // https://firebase.google.com/docs/auth/web/manage-users#send_a_password_reset_email
-    try {
-        console.log("Passord reset mail er sendt")
-    }
-    catch (err) {
-        console.error(err);
-    }
+    await sendPasswordReset(auth,email)
+    .then(()=> {
+        console.log("Email er sendt :)");
+    })
+    .catch((error)=> {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+    })
+    // try {
+    //     await sendPasswordResetEmail(auth, email);
+    //   } catch (err) {
+    //     console.error(err);
+    //   }
 };
 
 export {
